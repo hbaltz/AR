@@ -122,6 +122,9 @@ int main()
     /******************* Chargement des modeles 3D ***********************/
 
     Model * singe = new Model("./opengl_code/model/suzanne/suzanne.obj");
+    Model * nanosuit = new Model("./opengl_code/model/nanosuit/nanosuit.obj");
+    Model * house = new Model("./opengl_code/model/House/house.obj");
+    //Model * bati = new Model("./opengl_code/model/export_obj/3_BATI_INDIFFERENCIE.obj");
     
     /*********************************************************************/
     
@@ -159,7 +162,8 @@ int main()
     
     /*********************************************************************/
 
-    
+    float mod = 1.0f;
+
     // Game loop
     while(!glfwWindowShouldClose(window))
     {
@@ -207,40 +211,42 @@ int main()
         lightshader.Use();
 
         std::vector<TagData> tags = reader.getTags();
-        
+
         for(int i = 0 ; i < tags.size() ; i++) {
-                std::cout << "ID: " << tags[i].tagId << std::endl;
-                std::cout << "x: " << tags[i].position[0] << std::endl;
-                std::cout << "y: " << tags[i].position[1] << std::endl;
-                std::cout << "z: " << tags[i].position[2] << std::endl;
-                std::cout << "--------------------------" << std::endl;
+            model=glm::mat4(1.0);
             
-                model=glm::mat4(1.0);
-                model[3][0] = tags[i].position[0];
-                model[3][1] = tags[i].position[1];
-                model[3][2] = tags[i].position[2];
-
-                for(int j = 0 ; j < 3; j++){
-                    for(int k = 0 ; k <3 ; k++){
-                        model[k][j] = tags[i].orientation[j][k];
-                    }
+            for(int j = 0 ; j < 3; j++){
+                model[3][j] = tags[i].position[j];
+                for(int k = 0 ; k <3 ; k++){
+                    model[k][j] = tags[i].orientation[j][k];
                 }
+            }
 
-                model = glm::scale(model, glm::vec3(7.0f, 7.0f, 7.0f));
+            if ( tags[i].tagId == 3){
+                mod = model[0][1]+1;
+            }
+
+            if ( tags[i].tagId == 0){
+                model = glm::scale(model, mod*0.2f*glm::vec3(1.0f, 1.0f, 1.0f));
+                std::cout <<  mod << std::endl;
+                glUniformMatrix4fv(glGetUniformLocation(lightshader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+                house->Draw(lightshader);
+            }else if (tags[i].tagId == 1){
+                model = glm::scale(model, mod*1.3f*glm::vec3(1.0f, 1.0f, 1.0f));
+                model = glm::rotate(model, glm::pi<float>(), glm::vec3(0.0f, 0.0f, 1.0f));
+                glUniformMatrix4fv(glGetUniformLocation(lightshader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+                nanosuit->Draw(lightshader);
+            }else if (tags[i].tagId == 2){
+                model = glm::scale(model, mod*7.0f*glm::vec3(1.0f, 1.0f, 1.0f));
                 model = glm::rotate(model, glm::pi<float>(), glm::vec3(0.0f, 0.0f, 1.0f));
                 
                 glUniformMatrix4fv(glGetUniformLocation(lightshader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
                 singe->Draw(lightshader);
             }
+        }
+            
 
-/*
-        model=glm::mat4(1.0);
-        //model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-        // On passe la position de l'objet au shader
-        glUniformMatrix4fv(glGetUniformLocation(lightshader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-        singe->Draw(lightshader);
-        */
         /*********************************************************************/
     
         // Mise à jour de l'affichage
